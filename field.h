@@ -11,19 +11,16 @@ class Field
 {
 public:
     explicit Field( std::size_t dim );
+    Field( const QVector< QVector< std::size_t > > & matrix, std::size_t dim );
+
     ~Field();
 public:
     //one step, refill cell, row, column and quad
     bool set( std::size_t row, std::size_t col, std::size_t val );
 
-    void unset( std::size_t row, std::size_t col );
-
     bool isResolved() const;
 
     bool isResolvable() const;
-
-    //ready to start
-    bool isReady() const;
 
     bool resolve();
 
