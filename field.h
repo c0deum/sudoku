@@ -25,7 +25,7 @@ public:
     bool resolve();
 
     //random field
-    static Field generate( std::size_t dim );
+    static Field * generate( std::size_t dim );
 
     std::size_t cell( std::size_t row, std::size_t col ) const;
 
@@ -38,6 +38,11 @@ public:
     std::size_t dim() const;
 
     void reset();
+
+    bool isStepAvailable( std::size_t row, std::size_t col, std::size_t val ) const;
+
+    const QVector< QVector< std::size_t > > & frontField() const;
+
 
 private:
     static void mixList( QList< std::size_t > & list );

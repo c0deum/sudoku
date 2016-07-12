@@ -234,28 +234,30 @@ std::ostream & operator <<( std::ostream & os, const Field & field )
     return os;
 }
 
-Field Field::generate( std::size_t dim )
+Field * Field::generate( std::size_t dim )
 {
-    Field field( dim );
+    //Field field( dim );
+
+    Field * field = new Field( dim );
 
     QSet< std::size_t > baseRow;
 
-    for( std::size_t val = 1; val <= field.sqrDim(); ++val )
+    for( std::size_t val = 1; val <= field->sqrDim(); ++val )
     {
         baseRow << val;
     }
 
     QVector< QVector< std::size_t > > matrix;
 
-    matrix.resize( field.sqrDim() );
+    matrix.resize( field->sqrDim() );
 
-    for( std::size_t row = 0; row < field.sqrDim(); ++row )
+    for( std::size_t row = 0; row < field->sqrDim(); ++row )
     {
-        matrix[ row ].resize( field.sqrDim() );
+        matrix[ row ].resize( field->sqrDim() );
     }
 
     //generate random row
-    for( std::size_t col = 0; col < field.sqrDim(); ++col )
+    for( std::size_t col = 0; col < field->sqrDim(); ++col )
     {
         std::size_t val = baseRow.values()[ qrand() % baseRow.size() ];
         matrix[ 0 ][ col ] = val;
@@ -263,45 +265,45 @@ Field Field::generate( std::size_t dim )
     }
 
     //generate first dim rows
-    for( std::size_t row = 1; row < field.dim(); ++row )
+    for( std::size_t row = 1; row < field->dim(); ++row )
     {
-        for( std::size_t col = field.dim(); col < field.sqrDim(); ++col )
+        for( std::size_t col = field->dim(); col < field->sqrDim(); ++col )
         {
-            matrix[ row ][ col - field.dim() ] = matrix[ row - 1 ][ col ];
+            matrix[ row ][ col - field->dim() ] = matrix[ row - 1 ][ col ];
         }
 
-        for( std::size_t col = 0; col < field.dim(); ++col )
+        for( std::size_t col = 0; col < field->dim(); ++col )
         {
-            matrix[ row ][ field.sqrDim() - field.dim() + col ] = matrix[ row - 1 ][ col ];
+            matrix[ row ][ field->sqrDim() - field->dim() + col ] = matrix[ row - 1 ][ col ];
         }
     }
 
     //generate all rows
-    for( std::size_t row = field.dim(); row < field.sqrDim(); ++row )
+    for( std::size_t row = field->dim(); row < field->sqrDim(); ++row )
     {
-        for( std::size_t col = 1; col < field.sqrDim(); ++col )
+        for( std::size_t col = 1; col < field->sqrDim(); ++col )
         {
-            matrix[ row ][ col - 1 ] = matrix[ row - field.dim() ][ col ];
+            matrix[ row ][ col - 1 ] = matrix[ row - field->dim() ][ col ];
         }
-        matrix[ row ][ field.sqrDim() - 1 ] = matrix[ row - field.dim() ][ 0 ];
+        matrix[ row ][ field->sqrDim() - 1 ] = matrix[ row - field->dim() ][ 0 ];
     }
 
     //mix
     QList< std::size_t > shiftList;
-    for( std::size_t val = 0; val < field.dim(); ++val )
+    for( std::size_t val = 0; val < field->dim(); ++val )
     {
         shiftList << val;
     }
 
-    for( std::size_t step = 0; step < field.sqrDim(); ++step )
+    for( std::size_t step = 0; step < field->sqrDim() * field->sqrDim(); ++step )
     {
         int variant = rand() % 5;
         //transpose field
         if( variant == 0 )
         {
-            for( std::size_t row = 0; row < field.sqrDim() - 1; ++row  )
+            for( std::size_t row = 0; row < field->sqrDim() - 1; ++row  )
             {
-                for( std::size_t col = row; col < field.sqrDim(); ++col )
+                for( std::size_t col = row; col < field->sqrDim(); ++col )
                 {
                     std::size_t tmp = matrix[ row ][ col ];
                     matrix[ row ][ col ] = matrix[ col ][ row ];
@@ -312,23 +314,23 @@ Field Field::generate( std::size_t dim )
         //swap two rows in block
         else if( variant == 1 )
         {
-            std::size_t block = qrand() % field.dim();
+            std::size_t block = qrand() % field->dim();
             mixList( shiftList );
 
-            for( std::size_t col = 0; col < field.sqrDim(); ++col )
+            for( std::size_t col = 0; col < field->sqrDim(); ++col )
             {
-                qSwap( matrix[ block * field.dim() + shiftList[ 0 ] ][ col ], matrix[ block * field.dim() + shiftList[ 1 ] ][ col ] );
+                qSwap( matrix[ block * field->dim() + shiftList[ 0 ] ][ col ], matrix[ block * field->dim() + shiftList[ 1 ] ][ col ] );
             }
         }
         //swap two columns in block
         else if( variant == 2 )
         {
-            std::size_t block = qrand() % field.dim();
+            std::size_t block = qrand() % field->dim();
             mixList( shiftList );
 
-            for( std::size_t row = 0; row < field.sqrDim(); ++row )
+            for( std::size_t row = 0; row < field->sqrDim(); ++row )
             {
-                qSwap( matrix[ row ][ block * field.dim() + shiftList[ 0 ] ], matrix[ row ][ block * field.dim() + shiftList[ 1 ] ] );
+                qSwap( matrix[ row ][ block * field->dim() + shiftList[ 0 ] ], matrix[ row ][ block * field->dim() + shiftList[ 1 ] ] );
             }
         }
         //swap two block rows
@@ -336,11 +338,11 @@ Field Field::generate( std::size_t dim )
         {
             mixList( shiftList );
 
-            for( std::size_t row = 0; row < field.dim(); ++row )
+            for( std::size_t row = 0; row < field->dim(); ++row )
             {
-                for( std::size_t col = 0; col < field.sqrDim(); ++col )
+                for( std::size_t col = 0; col < field->sqrDim(); ++col )
                 {
-                    qSwap( matrix[ row + shiftList[ 0 ] * field.dim() ][ col ], matrix[ row + shiftList[ 1 ] * field.dim() ][ col ] );
+                    qSwap( matrix[ row + shiftList[ 0 ] * field->dim() ][ col ], matrix[ row + shiftList[ 1 ] * field->dim() ][ col ] );
                 }
             }
         }
@@ -349,22 +351,21 @@ Field Field::generate( std::size_t dim )
         {
             mixList( shiftList );
 
-            for( std::size_t col = 0; col < field.dim(); ++col )
+            for( std::size_t col = 0; col < field->dim(); ++col )
             {
-                for( std::size_t row = 0; row < field.sqrDim(); ++row )
+                for( std::size_t row = 0; row < field->sqrDim(); ++row )
                 {
-                    qSwap( matrix[ row ][ col + shiftList[ 0 ] * field.dim() ], matrix[ row ][ col + shiftList[ 1 ] * field.dim() ] );
+                    qSwap( matrix[ row ][ col + shiftList[ 0 ] * field->dim() ], matrix[ row ][ col + shiftList[ 1 ] * field->dim() ] );
                 }
             }
         }
     }
 
-
     QSet< QPair< std::size_t, std::size_t > > cellsSet;
 
-    for( std::size_t row = 0; row < field.sqrDim(); ++row )
+    for( std::size_t row = 0; row < field->sqrDim(); ++row )
     {
-        for( std::size_t col = 0; col < field.sqrDim(); ++col )
+        for( std::size_t col = 0; col < field->sqrDim(); ++col )
         {
             cellsSet << qMakePair( row, col );
         }
@@ -379,7 +380,7 @@ Field Field::generate( std::size_t dim )
 
         matrix[ pos.first ][ pos.second ] = 0;
 
-        if( !Field( matrix, field.dim() ).isResolvable() )
+        if( !Field( matrix, field->dim() ).isResolvable() )
         {
             matrix[ pos.first ][ pos.second ] = val;
         }
@@ -387,11 +388,11 @@ Field Field::generate( std::size_t dim )
     }
 
     //save matrix to field
-    for( std::size_t row = 0; row < field.sqrDim(); ++row )
+    for( std::size_t row = 0; row < field->sqrDim(); ++row )
     {
-        for( std::size_t col = 0; col < field.sqrDim(); ++col )
+        for( std::size_t col = 0; col < field->sqrDim(); ++col )
         {
-            field.set( row, col, matrix[ row ][ col ] );
+            field->set( row, col, matrix[ row ][ col ] );
         }
     }
 
@@ -406,8 +407,24 @@ bool Field::isResolvable() const
 
 void Field::mixList( QList< std::size_t > &list )
 {
-    for( std::size_t step = 0; step < list.size(); ++step )
+    for( std::size_t step = 0; step < 2 * list.size(); ++step )
     {
         qSwap( list[ 0 ], list[ 1 + qrand() % ( list.size() - 1 ) ] );
     }
+}
+
+bool Field::isStepAvailable( std::size_t row, std::size_t col, std::size_t val ) const
+{
+    //return backField_[ row ][ col ].contains( val ) && ( backField_[ row ][ col ].values().size() == 1 );
+
+    Field field( frontField_, dim_ );
+
+    bool test = field.set( row, col, val );
+
+    return test && field.resolve();
+}
+
+const QVector< QVector< std::size_t > > & Field::frontField() const
+{
+    return frontField_;
 }
