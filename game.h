@@ -3,7 +3,10 @@
 
 #include <cstddef>
 
+#include <QMap>
+
 #include <QObject>
+
 
 class Field;
 
@@ -16,9 +19,11 @@ public:
     explicit Game( QObject * parent = nullptr );
     virtual ~Game();
 public:
-    void createNewGame( std::size_t dim );
+    void createNewGame( std::size_t dim, const QStringList & keywords );
 
     const QVector< QVector< std::size_t > > & field() const;
+
+    const QMap< QString, int > & stat() const;
 
 protected:
     virtual void timerEvent( QTimerEvent * event );
@@ -47,6 +52,8 @@ private:
     int saveConnectionInterval_ = {25000};
     int reconnectTimerId_ = {-1};
     int reconnectInterval_ = {1000};
+    QStringList keywords_;
+    QMap< QString, int > stat_;
 };
 
 #endif // GAME_H

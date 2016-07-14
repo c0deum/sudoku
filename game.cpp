@@ -23,7 +23,7 @@ Game::~Game()
     delete field_;
 }
 
-void Game::createNewGame( std::size_t dim )
+void Game::createNewGame( std::size_t dim, const QStringList & keywords )
 {
     delete field_;
 
@@ -40,6 +40,8 @@ void Game::createNewGame( std::size_t dim )
     std::cout << "Resolved Field:" << std::endl;
 
     std::cout << test;
+
+    keywords_ = keywords;
 
     emit gameCreated();
 }
@@ -80,26 +82,65 @@ void Game::onTextMessageReceived( const QString & message )
 
             QString message = jsonMessage[ "message" ].toString();
 
+
+            QString smile;
+
+            const QString PREFIX = "<img class = \"smile\" alt=\"";
+
+
+            int startSmilePos = message.indexOf( PREFIX );
+
+            if( startSmilePos != -1 )
+            {
+                startSmilePos += PREFIX.length();
+                int endSmilePos = message.indexOf( "\"", startSmilePos ) - 1;
+
+                if( endSmilePos - startSmilePos + 1 > 0 )
+                {
+                    smile = message.mid( startSmilePos, endSmilePos - startSmilePos + 1 );
+                }
+
+            }
+
+            message.remove( QRegExp( "<[^>]*>" ) );
+
+            message += smile;
+
+            message.replace( "  ", " ");
+
             QStringList tokens = message.split( QRegExp( "\\s" ) );
 
             if( tokens.size() == 3 )
             {
                 bool bVal, bRow, bCol;
 
-
                 int row = tokens[ 0 ].toInt( &bRow);
                 int col = tokens[ 1 ].toInt( &bCol );
-                int val = tokens[ 2 ].toInt( &bVal );
+                //int val = tokens[ 2 ].toInt( &bVal );
+                QString keyword = tokens[ 2 ];
 
-                if( !bVal || !bRow || !bCol )
+                //if( !bVal || !bRow || !bCol )
+                if( !bRow || !bCol )
                     return;
 
-                if( val > 0 && val <= field_->sqrDim() && row > 0 && row <= field_->sqrDim() && col > 0 && col <= field_->sqrDim() )
+                if( /*val > 0 && val <= field_->sqrDim()*/ keywords_.contains( keyword )  && row > 0 && row <= field_->sqrDim() && col > 0 && col <= field_->sqrDim() )
                 {
+                    int val = keywords_.indexOf( keyword ) + 1;
                     row--;
                     col--;
+
+                    QString nickName = jsonMessage[ "nick" ].toString();
+                    nickName.remove( QRegExp( "<[^>]*>" ) );
+
+                    if( !stat_.contains( nickName ) )
+                    {
+                        stat_[ nickName ] = 0;
+                    }
+
                     if( field_->isStepAvailable( row, col, val ) )
                     {
+                        stat_[ nickName ] += field_->freeCells();
+
                         field_->set( row, col, val );
                         emit gameFieldChanged( row, col, true );
 
@@ -109,9 +150,11 @@ void Game::onTextMessageReceived( const QString & message )
                     else if ( field_->cell( row, col ) == 0 )
                     {
                         //wrong step
+
+                        stat_[ nickName ] -= field_->freeCells();
+
                         emit gameFieldChanged( row, col, false );
                     }
-
 
                 }
             }
@@ -163,4 +206,9 @@ const QVector< QVector< std::size_t > > & Game::field() const
 {
     assert( field_ );
     return field_->frontField();
+}
+
+const QMap< QString, int > & Game::stat() const
+{
+    return stat_;
 }

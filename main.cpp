@@ -7,16 +7,25 @@
 
 #include "field.h"
 
+
 #include "qgameview.h"
+
+#include "qgamewindow.h"
 
 
 int main( int argc, char * argv[] )
 {
     QApplication app( argc, argv );
 
+    /*
     QGameView gameView;
 
     gameView.show();
+    */
+
+    QGameWindow gameWindow;
+
+    gameWindow.show();
 
     /*
     quint64 start = QDateTime::currentMSecsSinceEpoch();

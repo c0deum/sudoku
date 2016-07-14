@@ -51,6 +51,7 @@ void Field::reset()
             }
         }
     }
+    freeCells_ = sqrDim_ * sqrDim_;
 }
 
 bool Field::isResolved() const
@@ -79,6 +80,8 @@ bool Field::set( std::size_t row, std::size_t col, std::size_t val )
         return result;
 
     frontField_[ row ][ col ] = val;
+
+    freeCells_--;
 
     for( std::size_t index = 0; index < sqrDim_; ++index )
     {
@@ -427,4 +430,9 @@ bool Field::isStepAvailable( std::size_t row, std::size_t col, std::size_t val )
 const QVector< QVector< std::size_t > > & Field::frontField() const
 {
     return frontField_;
+}
+
+std::size_t Field::freeCells() const
+{
+    return freeCells_;
 }

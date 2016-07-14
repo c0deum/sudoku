@@ -3,20 +3,24 @@
 
 #include "game.h"
 
+#include <QImage>
+
 #include <QWidget>
+
 
 class QGameView : public QWidget
 {
     Q_OBJECT
 public:
     explicit QGameView( QWidget * parent = nullptr );
+
+    const Game * game() const;
+
 protected:
     virtual void paintEvent( QPaintEvent * event );
     virtual void resizeEvent( QResizeEvent * event );
 private:
     void drawField();
-
-
 signals:
 
 public slots:
@@ -28,6 +32,8 @@ private:
     Game * game_ = {nullptr};
     bool lastCellResult_;
     QPair< std::size_t, std::size_t > lastCell_;
+    QStringList keywords_;
+    QVector< QImage > images_;
 
 };
 

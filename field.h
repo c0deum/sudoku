@@ -43,6 +43,8 @@ public:
 
     const QVector< QVector< std::size_t > > & frontField() const;
 
+    std::size_t freeCells() const;
+
 
 private:
     static void mixList( QList< std::size_t > & list );
@@ -51,6 +53,7 @@ private:
     std::size_t sqrDim_;
     QVector< QVector< std::size_t > > frontField_;
     QVector< QVector< QSet< std::size_t > > > backField_;
+    std::size_t freeCells_;
 };
 
 std::istream & operator >> ( std::istream & is, Field & field );
