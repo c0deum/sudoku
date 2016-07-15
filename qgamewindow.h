@@ -1,6 +1,8 @@
 #ifndef QGAMEWINDOW_H
 #define QGAMEWINDOW_H
 
+#include <QMap>
+
 #include <QWidget>
 
 
@@ -21,12 +23,17 @@ signals:
 public slots:
 
 private slots:
-    void onStatChanged();
-
+    void onGameCreated();
+    void onGameFinished();
+    void onGameFieldChanged();
 
 private:
     QGameView * gameView_;
-    QListWidget * statLis_;
+    QListWidget * gameStatList_;
+    QListWidget * gamesStatList_;
+    QListWidget * stepsList_;
+
+    QMap< QString, int > gamesStat_;
 };
 
 #endif // QGAMEWINDOW_H

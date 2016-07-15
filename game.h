@@ -19,7 +19,7 @@ public:
     explicit Game( QObject * parent = nullptr );
     virtual ~Game();
 public:
-    void createNewGame( std::size_t dim, const QStringList & keywords );
+    void createNewGame( std::size_t dim/*, const QStringList & keywords*/ );
 
     const QVector< QVector< std::size_t > > & field() const;
 
@@ -46,14 +46,15 @@ public slots:
 
 private:
     Field * field_ = {nullptr};
+    Field * resolvedField_ = {nullptr};
     QWebSocket * socket_ = {nullptr};
     int socketPort_ = 15619;
     int saveConnectionTimerId_ = {-1};
     int saveConnectionInterval_ = {25000};
     int reconnectTimerId_ = {-1};
     int reconnectInterval_ = {1000};
-    QStringList keywords_;
-    QMap< QString, int > stat_;
+    //QStringList keywords_;
+    QMap< QString, int > stat_;    
 };
 
 #endif // GAME_H

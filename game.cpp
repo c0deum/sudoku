@@ -21,13 +21,32 @@ Game::Game( QObject *parent )
 Game::~Game()
 {
     delete field_;
+    delete resolvedField_;
 }
 
-void Game::createNewGame( std::size_t dim, const QStringList & keywords )
+void Game::createNewGame( std::size_t dim/*, const QStringList & keywords*/ )
 {
     delete field_;
 
+    delete resolvedField_;
+
     field_ = Field::generate( dim );
+
+    resolvedField_ = new Field( field_->frontField(), dim );
+
+    std::cout << "Base Field:" << std::endl;
+
+    std::cout << *resolvedField_;
+
+    resolvedField_->resolve();
+
+    std::cout << "Resolved Field:" << std::endl;
+
+    std::cout << *resolvedField_;
+
+    stat_.clear();
+
+    /*
 
     Field test( field_->frontField(), dim );
 
@@ -40,8 +59,11 @@ void Game::createNewGame( std::size_t dim, const QStringList & keywords )
     std::cout << "Resolved Field:" << std::endl;
 
     std::cout << test;
+    */
 
-    keywords_ = keywords;
+    //keywords_ = keywords;
+
+
 
     emit gameCreated();
 }
@@ -116,16 +138,16 @@ void Game::onTextMessageReceived( const QString & message )
 
                 int row = tokens[ 0 ].toInt( &bRow);
                 int col = tokens[ 1 ].toInt( &bCol );
-                //int val = tokens[ 2 ].toInt( &bVal );
-                QString keyword = tokens[ 2 ];
+                int val = tokens[ 2 ].toInt( &bVal );
+                //QString keyword = tokens[ 2 ];
 
                 //if( !bVal || !bRow || !bCol )
                 if( !bRow || !bCol )
                     return;
 
-                if( /*val > 0 && val <= field_->sqrDim()*/ keywords_.contains( keyword )  && row > 0 && row <= field_->sqrDim() && col > 0 && col <= field_->sqrDim() )
+                if( val > 0 && val <= field_->sqrDim()/* keywords_.contains( keyword )*/  && row > 0 && row <= field_->sqrDim() && col > 0 && col <= field_->sqrDim() )
                 {
-                    int val = keywords_.indexOf( keyword ) + 1;
+                    //int val = keywords_.indexOf( keyword ) + 1;
                     row--;
                     col--;
 
@@ -137,7 +159,8 @@ void Game::onTextMessageReceived( const QString & message )
                         stat_[ nickName ] = 0;
                     }
 
-                    if( field_->isStepAvailable( row, col, val ) )
+                    if( ( resolvedField_->cell( row, col ) == val ) && ( field_->cell( row, col ) == 0 ) )
+                        //( field_->cellVariants( row, col ).size() == 1 ) && ( field_->cellVariants( row, col ).values().contains( val ) )/*field_->isStepAvailable( row, col, val )*/ )
                     {
                         stat_[ nickName ] += field_->freeCells();
 

@@ -17,10 +17,11 @@ public:
     const Game * game() const;
 
 protected:
-    virtual void paintEvent( QPaintEvent * event );
-    virtual void resizeEvent( QResizeEvent * event );
+    virtual void paintEvent( QPaintEvent * event );    
+    virtual void timerEvent( QTimerEvent * event );
 private:
-    void drawField();
+    void loadTheme();
+
 signals:
 
 public slots:
@@ -32,9 +33,11 @@ private:
     Game * game_ = {nullptr};
     bool lastCellResult_;
     QPair< std::size_t, std::size_t > lastCell_;
-    QStringList keywords_;
+    //QStringList keywords_;
     QVector< QImage > images_;
-
+    QVector< std::size_t > indexMap_;
+    int startNewGameTimerId_ = -1;
+    int startNewGameDelay = 5000;
 };
 
 #endif // QGAMEVIEW_H

@@ -21,9 +21,13 @@ QGameView::QGameView( QWidget * parent )
     QObject::connect( game_, SIGNAL( gameFieldChanged( std::size_t, std::size_t, bool ) ), this, SLOT( onGameFieldChanged( std::size_t, std::size_t, bool ) ) );
     QObject::connect( game_, SIGNAL( gameFinished() ), this, SLOT( onGameFinished() ) );
 
-    //game_->createNewGame( GAME_DIM );    
+    loadTheme();
 
-    onGameFinished();
+    game_->createNewGame( GAME_DIM );
+
+
+
+    //onGameFinished();
 }
 
 void QGameView::paintEvent( QPaintEvent * event )
@@ -62,7 +66,7 @@ void QGameView::paintEvent( QPaintEvent * event )
         painter.drawText( QRectF( index * rowSide, 0, rowSide, colSide ), Qt::AlignCenter, QString::number( index ) );
         painter.drawText( QRectF( 0, index * colSide, rowSide, colSide ), Qt::AlignCenter, QString::number( index ) );
 
-        painter.drawImage( QRectF( index * rowSide, ( game_->field().size() + 1 ) * colSide , rowSide, colSide ), images_[ index - 1 ] );
+        painter.drawImage( QRectF( index * rowSide, ( game_->field().size() + 1 ) * colSide , rowSide, colSide ), images_[ indexMap_[ index - 1 ] ] );
 
         painter.drawRect( QRectF( index * rowSide, 0, rowSide, colSide ) );
         painter.drawRect( QRectF( 0, index * colSide, rowSide, colSide ) );
@@ -78,13 +82,15 @@ void QGameView::paintEvent( QPaintEvent * event )
             {
                 painter.fillRect( QRectF( row * rowSide, col * colSide, rowSide, colSide ), lastCellResult_? QBrush( Qt::green ): QBrush( Qt::red ) );
             }
-            painter.drawRect( QRectF( row * rowSide, col * colSide, rowSide, colSide ) );
+
             if( game_->field()[ col - 1 ][ row - 1 ] > 0 )
             {
                 //painter.drawText( QRectF( row * rowSide, col * colSide, rowSide, colSide ), Qt::AlignCenter, \
                                   QString::number( game_->field()[ col - 1 ][ row - 1 ] ) );
-                painter.drawImage( QRectF( row * rowSide, col * colSide, rowSide, colSide ), images_[ game_->field()[ col - 1 ][ row - 1 ] - 1 ]  );
+                painter.drawImage( QRectF( row * rowSide, col * colSide, rowSide, colSide ), images_[ indexMap_[ game_->field()[ col - 1 ][ row - 1 ] - 1 ] ] );
             }
+
+            painter.drawRect( QRectF( row * rowSide, col * colSide, rowSide, colSide ) );
 
         }
     }
@@ -101,61 +107,35 @@ void QGameView::paintEvent( QPaintEvent * event )
         painter.setPen( oldPen );
     }
 
-    //painter.end();
+
+    if( lastCell_.first < game_->field().size() && lastCell_.second < game_->field().size()  )
+    {
+        QPen oldPen = painter.pen();
+
+        painter.setPen( QPen( lastCellResult_? QBrush( Qt::green ): QBrush( Qt::red ), 9 ) );
+
+        painter.drawRect( QRectF( ( lastCell_.second + 1 ) * rowSide, ( lastCell_.first + 1 ) * colSide, rowSide, colSide ) );
+
+        painter.setPen( oldPen );
+    }
 }
 
-void QGameView::resizeEvent( QResizeEvent * event )
-{
-    //drawField();
-}
 
-void QGameView::drawField()
-{
-    //QPainter painter( this);
-
-
-}
 
 void QGameView::onGameCreated()
 {
-//    drawField();
     lastCell_.first = 1000;
     lastCell_.second = 1000;
 
-    lastCellResult_ = false;
+    lastCellResult_ = false;        
 
     update();
 }
 
 void QGameView::onGameFinished()
 {
-    assert( game_ );
-    
-    const QString THEME_PATH = QApplication::applicationDirPath() + "/themes/sc2tvsmiles";
-        
-    QDir themesDir( THEME_PATH );
-
-    QStringList themesFiles = themesDir.entryList( QStringList( "*.png" ), QDir::Files | QDir::NoSymLinks );
-
-    for( int i = 0; i < themesFiles.size(); ++i )
-    {
-        int first = qrand() % themesFiles.size();
-        int second = qrand() % themesFiles.size();
-
-        if( first != second )
-            swap( themesFiles[ first ], themesFiles[ second ] );
-    }
-    
-    images_.clear();
-    keywords_.clear();
-
-    for( const QString & name : themesFiles )
-    {
-        images_.push_back( QImage( THEME_PATH + "/" + name ) );
-        keywords_.push_back( ":" + name.left( name.length() - 4 ) + ":" );
-    }    
-    
-    game_->createNewGame( GAME_DIM, keywords_ );
+    if( startNewGameTimerId_ == -1 )
+        startNewGameTimerId_ = startTimer( startNewGameDelay );
 }
 
 void QGameView::onGameFieldChanged( std::size_t row, std::size_t col, bool success )
@@ -173,4 +153,55 @@ void QGameView::onGameFieldChanged( std::size_t row, std::size_t col, bool succe
 const Game * QGameView::game() const
 {
     return game_;
+}
+
+void QGameView::loadTheme()
+{
+    const QString THEME_PATH = QApplication::applicationDirPath() + "/themes/pokemons";
+
+    QDir themesDir( THEME_PATH );
+
+    QStringList themesFiles = themesDir.entryList( QStringList( "*.png" ), QDir::Files | QDir::NoSymLinks );
+
+    images_.clear();
+    indexMap_.clear();
+    //keywords_.clear();
+
+    //for( const QString & name : themesFiles )
+    for( std::size_t index = 0; index < themesFiles.size(); ++index )
+    {
+        //images_.push_back( QImage( THEME_PATH + "/" + name ) );
+
+        //keywords_.push_back( ":" + name.left( name.length() - 4 ) + ":" );
+
+        images_.push_back( QImage( THEME_PATH + "/" + themesFiles[ index ] ) );
+        indexMap_.push_back( index );
+    }
+
+    for( int i = 0; i < indexMap_.size(); ++i )
+    {
+        int first = qrand() % indexMap_.size();
+        int second = qrand() % indexMap_.size();
+
+        if( first != second )
+        {
+            //swap( indexMap_[ first ], indexMap_[ second ] );
+            std::size_t tmp = indexMap_[ first ];
+            indexMap_[ first ] = indexMap_[ second ];
+            indexMap_[ second ] = tmp;
+
+        }
+    }
+
+}
+
+void QGameView::timerEvent( QTimerEvent * event )
+{
+    if( event->timerId() == startNewGameTimerId_ )
+    {
+        assert( game_ );
+        game_->createNewGame( GAME_DIM/*, keywords_*/ );
+        killTimer( startNewGameTimerId_ );
+        startNewGameTimerId_ = -1;
+    }
 }
